@@ -23,6 +23,10 @@ class AppDimensions {
   
   double get paddingBetweenIconsInRow => maxWidth * 0.04;
   double get cardRadius => maxWidth * 0.04;
+
+  // Standard button paddings (matches RedButton logic)
+  double get buttonHPadding => (maxWidth * 0.06).clamp(12, 40).toDouble();
+  double get buttonVPadding => (maxWidth * 0.015).clamp(8, 24).toDouble();
   
   // Helper method to determine responsive breakpoints
   bool get isSmallScreen => maxWidth < 600;

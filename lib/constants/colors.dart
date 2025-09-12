@@ -28,4 +28,6 @@ class AppColor {
   static const Color lightPink3 = Color(0xFFDABFFF);
   static const Color chatbotResColor = Color(0xFF673F9F);
   static const Color lightPink4 = Color(0xffEBDCFF);
+  // Added soft mint tone (was hardcoded in RedButton before)
+  static const Color mint = Color(0xFFCFEFE8);
 }
