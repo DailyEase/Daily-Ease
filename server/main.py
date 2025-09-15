@@ -16,10 +16,12 @@ load_dotenv()
 
 app = Flask(__name__)
 
-# Secret key from .env
+# JWT Secret Key
 app.config['JWT_SECRET_KEY'] = os.getenv("JWT_SECRET_KEY", "fallback_secret")
-# Database setup (SQLite for now, can switch to MySQL later)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
+
+# Database setup (Railway/Postgres if DATABASE_URL exists, else fallback to SQLite)
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///database.db')
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Token expiry times
 app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(minutes=15)   # short-lived access token
@@ -29,14 +31,17 @@ db = SQLAlchemy(app)
 api = Api(app)
 jwt = JWTManager(app)
 
+
 # User model
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(20), unique=True, nullable=False)
     password = db.Column(db.String(200), nullable=False)
 
+
 with app.app_context():
     db.create_all()
+
 
 # Register API
 class UserRegi(Resource):
@@ -56,6 +61,7 @@ class UserRegi(Resource):
         db.session.commit()
         return {'message': 'User registered successfully'}, 200
 
+
 # Login API
 class UserLogin(Resource):
     def post(self):
@@ -74,6 +80,7 @@ class UserLogin(Resource):
             }, 200
         return {'message': 'Invalid credentials'}, 401
 
+
 # Refresh API
 class TokenRefresh(Resource):
     @jwt_required(refresh=True)
@@ -82,6 +89,7 @@ class TokenRefresh(Resource):
         new_access_token = create_access_token(identity=current_user)
         return {'access_token': new_access_token}, 200
 
+
 # Protected API
 class ProtectedResource(Resource):
     @jwt_required()
@@ -89,11 +97,15 @@ class ProtectedResource(Resource):
         current_user = get_jwt_identity()
         return {'message': f'Hello user {current_user}, you accessed the protected resource'}, 200
 
+
 # Add endpoints
 api.add_resource(UserRegi, '/register')
 api.add_resource(UserLogin, '/login')
 api.add_resource(TokenRefresh, '/refresh')
 api.add_resource(ProtectedResource, '/secure')
 
+
+# --- Final run block (works both locally and on Railway) ---
 if __name__ == "__main__":
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port, debug=True)
